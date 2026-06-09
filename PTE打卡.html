@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PTE 冲 60+ 每日打卡</title>
+<style>
+  :root{
+    --red:#e74c3c; --green:#27ae60; --blue:#2e86de; --yellow:#f39c12;
+    --bg:#f4f6fb; --card:#ffffff; --ink:#2c3e50; --muted:#7f8c8d;
+    --line:#eef1f6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;padding:16px;padding-bottom:60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  header{
+    background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;
+    border-radius:18px;padding:22px 22px 20px;margin-bottom:16px;
+    box-shadow:0 8px 24px rgba(102,126,234,.3);
+  }
+  header h1{font-size:1.45rem;margin-bottom:4px;}
+  .date{opacity:.92;font-size:.92rem;margin-bottom:14px;}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat{background:rgba(255,255,255,.18);border-radius:12px;padding:8px 14px;backdrop-filter:blur(4px);}
+  .stat b{font-size:1.3rem;display:block;line-height:1.2;}
+  .stat span{font-size:.72rem;opacity:.9;}
+
+  .creed{
+    background:#fff7e6;border-left:4px solid var(--yellow);
+    border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:.9rem;color:#8a6d3b;
+  }
+
+  .progress-wrap{margin-top:14px;}
+  .bar{height:10px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;}
+  .bar i{display:block;height:100%;width:0;background:#fff;border-radius:99px;transition:width .4s ease;}
+  .pct{font-size:.8rem;margin-top:6px;opacity:.95;}
+
+  .module{
+    background:var(--card);border-radius:16px;padding:6px 16px 14px;margin-bottom:14px;
+    box-shadow:0 2px 10px rgba(0,0,0,.04);border-top:5px solid var(--line);
+  }
+  .module.red{border-top-color:var(--red);}
+  .module.green{border-top-color:var(--green);}
+  .module.blue{border-top-color:var(--blue);}
+  .module.yellow{border-top-color:var(--yellow);}
+  .module.gray{border-top-color:#95a5a6;}
+
+  .mhead{display:flex;justify-content:space-between;align-items:center;padding:12px 2px 6px;}
+  .mtitle{font-size:1.02rem;font-weight:700;}
+  .mtime{font-size:.74rem;color:var(--muted);background:#f0f2f6;padding:3px 9px;border-radius:8px;}
+
+  .task{border-bottom:1px solid var(--line);padding:11px 2px;}
+  .task:last-child{border-bottom:none;}
+  .trow{display:flex;align-items:flex-start;gap:11px;cursor:pointer;}
+  .cb{
+    flex:0 0 22px;width:22px;height:22px;border:2px solid #cdd5e0;border-radius:7px;
+    margin-top:2px;display:flex;align-items:center;justify-content:center;
+    transition:all .15s;font-size:14px;color:#fff;
+  }
+  .task.done .cb{background:var(--green);border-color:var(--green);}
+  .ttext{flex:1;font-weight:600;font-size:.96rem;transition:.15s;}
+  .task.done .ttext{text-decoration:line-through;color:var(--muted);}
+  .tip{margin:5px 0 0 33px;font-size:.82rem;color:var(--muted);background:#f7f9fc;border-radius:8px;padding:7px 10px;}
+  .tip b{color:var(--ink);}
+
+  .rules{
+    background:#fef0f0;border:1px solid #fbd5d5;border-radius:14px;padding:16px 18px;margin-bottom:14px;
+  }
+  .rules h2{font-size:1rem;color:var(--red);margin-bottom:8px;}
+  .rules p{font-size:.85rem;margin-bottom:8px;color:#8a3a3a;}
+  .rules p:last-child{margin-bottom:0;}
+
+  .actions{display:flex;gap:10px;margin:18px 0 6px;}
+  button{
+    flex:1;border:none;border-radius:12px;padding:13px;font-size:.92rem;font-weight:700;
+    cursor:pointer;transition:.15s;font-family:inherit;
+  }
+  .btn-reset{background:#fff;color:var(--muted);border:1.5px solid #e0e4ea;}
+  .btn-reset:active{background:#f0f2f6;}
+  .btn-done{background:linear-gradient(135deg,#27ae60,#1e8e4f);color:#fff;}
+  .btn-done:active{transform:scale(.98);}
+
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120%);
+    background:var(--ink);color:#fff;padding:13px 22px;border-radius:14px;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);transition:transform .35s cubic-bezier(.2,1.2,.4,1);z-index:99;
+    font-size:.92rem;text-align:center;max-width:90%;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  footer{text-align:center;color:#b5bdc9;font-size:.75rem;margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎯 PTE 冲 60+/65+ 每日打卡</h1>
+    <div class="date" id="today"></div>
+    <div class="stats">
+      <div class="stat"><b id="streak">0</b><span>连续打卡天数</span></div>
+      <div class="stat"><b id="total">0</b><span>累计完成任务</span></div>
+      <div class="stat"><b id="doneToday">0/0</b><span>今日进度</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="pct" id="pctText">完成 0%</div>
+    </div>
+  </header>
+
+  <div class="creed">💡 <b>核心军规：</b>放弃完美主义！内容不够，流利度凑；大题死磕，小题速过。不跟长文章纠结，把时间留给命根子。</div>
+
+  <div id="modules"></div>
+
+  <div class="rules">
+    <h2>🚨 考场两大限时铁律（死记硬背）</h2>
+    <p><b>1. 阅读板块（合并计时）：</b>单选、多选、段落排序总共耗时<b>不超过 5 分钟</b>（多选只选一个，选完立刻 Next）。把时间省下来，每道 FIB 填空题留足 2-3 分钟慢慢做！</p>
+    <p><b>2. 听力板块（合并计时）：</b>中间长文章选择题、填空题听完音频后 <b>5 秒内凭直觉选完，立刻 Next</b>。必须在计时器还剩 <b>5-6 分钟</b> 时安全进入 WFD，留足时间检查拼写！</p>
+  </div>
+
+  <div class="actions">
+    <button class="btn-reset" onclick="resetDay()">🔄 重置今日</button>
+    <button class="btn-done" onclick="celebrate()">✅ 我完成啦</button>
+  </div>
+
+  <footer>进度自动保存在本机浏览器 · 每天打开自动开启新一天</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = [
+  {color:"red", title:"🟥 听力与写作的“大庄家”", time:"约 40 分钟", tasks:[
+    {t:"精刷高频 WFD（听写句子）：35-45 句", tip:"<b>键盘盲敲 + 错题三步重温。</b>把今天拼错的、少写 s 或 ed 的词记下来，那是明天拿分的关键。"},
+    {t:"WFD 考场“试词法”模拟：5 句", tip:"<b>合法作弊。</b>练习同时敲下 apple apples / a the，习惯利用 AI 漏洞强行捞分的节奏。"},
+  ]},
+  {color:"green", title:"🟩 口语与听力的“流利度防线”", time:"约 40 分钟", tasks:[
+    {t:"高频 RA（朗读句子）：5-8 篇", tip:"<b>遇到生词直接滑，死不改口不回头。</b>只要全篇没有“呃、啊”的卡顿，直接从口语里抢回阅读分！"},
+    {t:"高频 RS（重复句子）：20-30 句", tip:"<b>内容不够，流利度凑。</b>听懂多少算多少，哪怕一句话只听懂 4 个词，也要像读新闻一样顺溜地喷出来。绝不在开头卡顿回忆！"},
+    {t:"傻瓜 DI（描述图像）：3-5 题", tip:"<b>10 秒抓词，无脑套模板。</b>40 秒内声音平稳、毫无感情地把图上的单词套入模板读完。"},
+  ]},
+  {color:"blue", title:"🟦 阅读与写作的“核心提分区”", time:"约 30 分钟", tasks:[
+    {t:"精刷高频 FIB-W（下拉菜单填空）：10 题", tip:"<b>双向供分大户。</b>重点看错题，把固定搭配（如 exert an impact on）抄在错题本上。"},
+    {t:"精刷高频 FIB-R（拖拽填空）：10 题", tip:"<b>纯阅读抢分点。</b>先判断空格缺什么词性（名词/动词/形容词），直接排除干扰项。"},
+  ]},
+  {color:"yellow", title:"🟨 听力与写作的“送分/保底神器”", time:"约 15 分钟", tasks:[
+    {t:"高频 HIW（听力选错词）：3-5 题", tip:"<b>稳字当头，绝不瞎猜。</b>眼睛死死跟着音频语速走，100% 确定读错才点。不确定的直接放过，避开倒扣分。"},
+    {t:"WE（大作文）万能模板盲敲：1 遍", tip:"<b>限时 5 分钟，拼写 0 错误。</b>所有题型只用这一个模板！练打字速度，确保考场闭着眼都能敲对。"},
+    {t:"SST/RL 关键词抓取：1-2 题", tip:"<b>只抓 8-10 个独立名词。</b>放弃听懂长文章的幻想，把抓到的词直接塞进万能填词模板。"},
+  ]},
+  {color:"gray", title:"📅 睡前复习与次日热身", time:"5 分钟", tasks:[
+    {t:"错题本过筛子", tip:"睡前把今天累积的 FIB 固定搭配和 WFD 错词在脑子里过一遍。"},
+    {t:"次日盲听通关", tip:"明天做新题前，先盲听复习昨天错的 WFD，直到能一次性完全写对。"},
+  ]},
+];
+
+const KEY="pte_checkin_v1";
+// 按本地时区计算日期，避免凌晨/早上被当成新的一天清空记录
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+
+function load(){
+  let s={};try{s=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
+  if(!s.streak)s.streak=0;
+  if(!s.total)s.total=0;
+  if(!s.lastDate)s.lastDate="";
+  if(!s.checks||s.date!==todayStr())s.checks={};
+  if(s.date!==todayStr())s.date=todayStr();
+  return s;
+}
+function save(s){localStorage.setItem(KEY,JSON.stringify(s));}
+let state=load();
+
+function totalTasks(){return DATA.reduce((n,m)=>n+m.tasks.length,0);}
+function doneCount(){return Object.values(state.checks).filter(Boolean).length;}
+
+function render(){
+  document.getElementById("today").textContent=new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
+  const box=document.getElementById("modules");box.innerHTML="";
+  DATA.forEach((m,mi)=>{
+    const div=document.createElement("div");div.className="module "+m.color;
+    div.innerHTML=`<div class="mhead"><span class="mtitle">${m.title}</span><span class="mtime">${m.time}</span></div>`;
+    m.tasks.forEach((task,ti)=>{
+      const id=mi+"-"+ti;const done=!!state.checks[id];
+      const el=document.createElement("div");el.className="task"+(done?" done":"");
+      el.innerHTML=`<div class="trow"><div class="cb">${done?"✔":""}</div><div class="ttext">${task.t}</div></div><div class="tip">${task.tip}</div>`;
+      el.querySelector(".trow").onclick=()=>toggle(id);
+      div.appendChild(el);
+    });
+    box.appendChild(div);
+  });
+  updateStats();
+}
+
+function toggle(id){
+  state.checks[id]=!state.checks[id];
+  if(doneCount()===totalTasks())markStreak();
+  save(state);render();
+}
+
+function markStreak(){
+  if(state.lastDate===todayStr())return; // already counted today
+  const yd=new Date(Date.now()-86400000);
+  const y=yd.getFullYear()+"-"+String(yd.getMonth()+1).padStart(2,"0")+"-"+String(yd.getDate()).padStart(2,"0");
+  state.streak=(state.lastDate===y)?state.streak+1:1;
+  state.lastDate=todayStr();
+  state.total+=totalTasks();
+  save(state);
+  toast(`🔥 全部完成！连续打卡 ${state.streak} 天，继续冲 60+！`);
+}
+
+function updateStats(){
+  const d=doneCount(),t=totalTasks(),p=Math.round(d/t*100);
+  document.getElementById("streak").textContent=state.streak;
+  document.getElementById("total").textContent=state.total;
+  document.getElementById("doneToday").textContent=d+"/"+t;
+  document.getElementById("barFill").style.width=p+"%";
+  document.getElementById("pctText").textContent="完成 "+p+"%";
+}
+
+function celebrate(){
+  const d=doneCount(),t=totalTasks();
+  if(d===t){markStreak();toast("🎉 今日满分打卡！命根子全拿下！");}
+  else toast(`还差 ${t-d} 项就满了，冲一把！💪`);
+}
+
+function resetDay(){
+  if(!confirm("确定清空今天的打卡记录吗？（连续天数与累计不变）"))return;
+  state.checks={};save(state);render();toast("已重置今日 ✨");
+}
+
+let toastT;
+function toast(msg){
+  const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),2600);
+}
+
+render();
+</script>
+</body>
+</html>
